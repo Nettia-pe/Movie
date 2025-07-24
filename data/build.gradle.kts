@@ -22,3 +22,8 @@ android {
         jvmTarget = "1.8"
     }
 }
+
+dependencies {
+    implementation(libs.retrofit2)
+    implementation(libs.retrofit2.converter.gson)
+}
