@@ -24,11 +24,14 @@ import pe.nettia.movie.ui.theme.MovieTheme
 import pe.nettia.movie.ui.viewmodel.MovieViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import pe.nettia.movie.ui.viewmodel.MovieDetailViewModel
+import androidx.core.splashscreen.SplashScreen
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val movieViewModel: MovieViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
