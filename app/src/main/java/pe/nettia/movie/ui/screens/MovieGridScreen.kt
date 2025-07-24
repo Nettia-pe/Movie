@@ -1,6 +1,7 @@
 package pe.nettia.movie.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,7 +31,8 @@ private fun getPosterUrl(path: String?): String? =
 @Composable
 fun MovieGridScreen(
     modifier: Modifier = Modifier,
-    viewModel: MovieViewModel
+    viewModel: MovieViewModel,
+    onMovieClick: (Int) -> Unit
 ) {
     val movies = viewModel.movies.collectAsState().value
     val error = viewModel.error.collectAsState().value
@@ -55,7 +57,10 @@ fun MovieGridScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(movies) { movie ->
-                    MovieGridItem(imageUrl = getPosterUrl(movie.posterUrl))
+                    MovieGridItem(
+                        imageUrl = getPosterUrl(movie.posterUrl),
+                        modifier = Modifier.clickable { onMovieClick(movie.id) }
+                    )
                 }
             }
         }

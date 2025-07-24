@@ -12,8 +12,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
 import pe.nettia.movie.ui.screens.MovieGridScreen
+import pe.nettia.movie.ui.screens.MovieDetailScreen
 import pe.nettia.movie.ui.theme.MovieTheme
 import pe.nettia.movie.ui.viewmodel.MovieViewModel
 
@@ -25,11 +31,32 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MovieTheme {
+                val navController = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MovieGridScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        viewModel = movieViewModel
-                    )
+                    NavHost(
+                        navController = navController,
+                        startDestination = "movies",
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        composable("movies") {
+                            MovieGridScreen(
+                                viewModel = movieViewModel,
+                                onMovieClick = { movieId ->
+                                    navController.navigate("detail/$movieId")
+                                }
+                            )
+                        }
+                        composable(
+                            route = "detail/{movieId}",
+                            arguments = listOf(navArgument("movieId") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            val movieId = backStackEntry.arguments?.getInt("movieId") ?: 0
+                            MovieDetailScreen(
+                                movieId = movieId,
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+                    }
                 }
             }
         }
