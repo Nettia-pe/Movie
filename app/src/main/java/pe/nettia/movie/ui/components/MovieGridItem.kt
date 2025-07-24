@@ -1,5 +1,7 @@
 package pe.nettia.movie.ui.components
 
+import android.util.Log
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Card
@@ -11,35 +13,46 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.*
+import coil.request.ImageRequest
 import pe.nettia.movie.ui.theme.MovieTheme
 
 @Composable
-fun MovieGridItem(imageUrl: String, modifier: Modifier = Modifier) {
+fun MovieGridItem(imageUrl: String?, modifier: Modifier = Modifier) {
     Card(modifier = modifier) {
-        val painter = rememberAsyncImagePainter(model = imageUrl)
+        val painter = rememberAsyncImagePainter(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(imageUrl)
+                .size(coil.size.Size.ORIGINAL)
+                .build()
+        )
         val state = painter.state
-        androidx.compose.foundation.layout.Box(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(2f/3f),
+                .aspectRatio(2f / 3f),
             contentAlignment = Alignment.Center
         ) {
             when (state) {
                 is AsyncImagePainter.State.Loading -> {
                     CircularProgressIndicator()
                 }
+
                 is AsyncImagePainter.State.Error -> {
                     Text("Error", color = Color.Red)
                 }
+
                 else -> {
                     AsyncImage(
                         model = imageUrl,
                         contentDescription = "Movie poster",
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxWidth().aspectRatio(2f/3f)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(2f / 3f)
                     )
                 }
             }
