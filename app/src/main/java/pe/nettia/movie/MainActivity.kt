@@ -22,6 +22,8 @@ import pe.nettia.movie.ui.screens.MovieGridScreen
 import pe.nettia.movie.ui.screens.MovieDetailScreen
 import pe.nettia.movie.ui.theme.MovieTheme
 import pe.nettia.movie.ui.viewmodel.MovieViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import pe.nettia.movie.ui.viewmodel.MovieDetailViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -51,8 +53,10 @@ class MainActivity : ComponentActivity() {
                             arguments = listOf(navArgument("movieId") { type = NavType.IntType })
                         ) { backStackEntry ->
                             val movieId = backStackEntry.arguments?.getInt("movieId") ?: 0
+                            val detailViewModel: MovieDetailViewModel = hiltViewModel()
+                            detailViewModel.loadMovieDetail(movieId)
                             MovieDetailScreen(
-                                movieId = movieId,
+                                viewModel = detailViewModel,
                                 onBack = { navController.popBackStack() }
                             )
                         }
