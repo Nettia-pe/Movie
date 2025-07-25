@@ -26,47 +26,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import pe.nettia.movie.ui.viewmodel.MovieDetailViewModel
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import pe.nettia.movie.ui.navigation.AppNavHost
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val movieViewModel: MovieViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MovieTheme {
-                val navController = rememberNavController()
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    NavHost(
-                        navController = navController,
-                        startDestination = "movies",
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
-                        composable("movies") {
-                            MovieGridScreen(
-                                viewModel = movieViewModel,
-                                onMovieClick = { movieId ->
-                                    navController.navigate("detail/$movieId")
-                                }
-                            )
-                        }
-                        composable(
-                            route = "detail/{movieId}",
-                            arguments = listOf(navArgument("movieId") { type = NavType.IntType })
-                        ) { backStackEntry ->
-                            val movieId = backStackEntry.arguments?.getInt("movieId") ?: 0
-                            val detailViewModel: MovieDetailViewModel = hiltViewModel()
-                            detailViewModel.loadMovieDetail(movieId)
-                            MovieDetailScreen(
-                                viewModel = detailViewModel,
-                                onBack = { navController.popBackStack() }
-                            )
-                        }
-                    }
-                }
+                AppNavHost()
             }
         }
-        movieViewModel.loadPopularMovies()
     }
 }

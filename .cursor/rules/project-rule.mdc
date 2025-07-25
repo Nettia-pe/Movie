@@ -24,6 +24,7 @@ Vamos a usar una arquitectura sencilla, donde tendremos:
 - La UI en Compose
 - Comunicación con la capa de datos mediante MVVM
 - La capa de datos estará formada por repositorios, que ocultarán qué librerías concretas se están utilizando.
+- Vamos a utilizar patrones de diseño para el desarrollo de la solución.
 
 ## Reglas extra
 
