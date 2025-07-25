@@ -1,61 +1,51 @@
 package pe.nettia.movie.ui.components
 
-import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.*
+import coil.compose.AsyncImage
+import coil.request.CachePolicy
 import coil.request.ImageRequest
 import pe.nettia.movie.ui.theme.MovieTheme
+import pe.nettia.movie.R
 
 @Composable
 fun MovieGridItem(imageUrl: String?, modifier: Modifier = Modifier) {
-    Card(modifier = modifier) {
-        val painter = rememberAsyncImagePainter(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(imageUrl)
-                .size(coil.size.Size.ORIGINAL)
-                .build()
-        )
-        val state = painter.state
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(2f / 3f),
-            contentAlignment = Alignment.Center
-        ) {
-            when (state) {
-                is AsyncImagePainter.State.Loading -> {
-                    CircularProgressIndicator()
-                }
-
-                is AsyncImagePainter.State.Error -> {
-                    Text("Error", color = Color.Red)
-                }
-
-                else -> {
-                    AsyncImage(
-                        model = imageUrl,
-                        contentDescription = "Movie poster",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(2f / 3f)
-                    )
-                }
-            }
+    val context = LocalContext.current
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(0.7f)
+            .background(Color(0xFFE0E0E0)),
+        contentAlignment = Alignment.Center
+    ) {
+        if (imageUrl != null) {
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(imageUrl)
+                    .diskCachePolicy(CachePolicy.ENABLED)
+                    .networkCachePolicy(CachePolicy.ENABLED)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = painterResource(id = R.drawable.ic_placeholder),
+                error = painterResource(id = R.drawable.ic_broken_image)
+            )
+        } else {
+            Text("Sin imagen", color = Color.DarkGray, textAlign = TextAlign.Center)
         }
     }
 }

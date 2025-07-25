@@ -7,11 +7,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -20,13 +25,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import pe.nettia.movie.ui.screens.MovieGridScreen
-import pe.nettia.movie.ui.screens.MovieDetailScreen
+import pe.nettia.movie.domain.model.Movie
 import pe.nettia.movie.ui.screens.FavoritesScreen
+import pe.nettia.movie.ui.screens.MovieDetailScreen
+import pe.nettia.movie.ui.screens.MovieGridScreen
 import pe.nettia.movie.ui.screens.SettingsScreen
-import pe.nettia.movie.ui.viewmodel.MovieViewModel
+import pe.nettia.movie.ui.viewmodel.FavoritesViewModel
 import pe.nettia.movie.ui.viewmodel.MovieDetailViewModel
-import androidx.hilt.navigation.compose.hiltViewModel
+import pe.nettia.movie.ui.viewmodel.MovieViewModel
 
 sealed class BottomNavItem(val route: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val label: String) {
     object Movies : BottomNavItem("movies", Icons.Filled.Home, "Películas")
@@ -82,7 +88,14 @@ fun AppNavHost(
                     )
                 }
                 composable(BottomNavItem.Favorites.route) {
-                    FavoritesScreen()
+                    val favoritesViewModel: FavoritesViewModel = hiltViewModel()
+                    FavoritesScreen(
+                        viewModel = favoritesViewModel,
+                        onMovieClick = { movie ->
+                            navController.currentBackStackEntry?.savedStateHandle?.set("movieFromFavorites", movie)
+                            navController.navigate("detail/${movie.id}")
+                        }
+                    )
                 }
                 composable(BottomNavItem.Settings.route) {
                     SettingsScreen()
@@ -94,9 +107,14 @@ fun AppNavHost(
                     val movieId = backStackEntry.arguments?.getInt("movieId") ?: 0
                     val detailViewModel: MovieDetailViewModel = hiltViewModel()
                     detailViewModel.loadMovieDetail(movieId)
+                    val movieViewModel: MovieViewModel = hiltViewModel()
+                    val movieFromList = movieViewModel.movies.collectAsState().value.find { it.id == movieId }
+                    val movieFromFavorites = backStackEntry.savedStateHandle.get<Movie>("movieFromFavorites")
                     MovieDetailScreen(
                         viewModel = detailViewModel,
-                        onBack = { navController.popBackStack() }
+                        onBack = { navController.popBackStack() },
+                        movieViewModel = movieViewModel,
+                        movieFromList = movieFromList ?: movieFromFavorites
                     )
                 }
             }

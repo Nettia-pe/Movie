@@ -17,6 +17,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,8 +35,9 @@ import androidx.compose.ui.unit.dp
 import pe.nettia.movie.ui.components.MovieGridItem
 import pe.nettia.movie.ui.theme.MovieTheme
 import pe.nettia.movie.ui.viewmodel.MovieViewModel
+import androidx.compose.foundation.layout.Box
 
-private fun getPosterUrl(path: String?): String? =
+fun getPosterUrl(path: String?): String? =
     path?.let { "https://image.tmdb.org/t/p/w500$it" }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -44,6 +50,7 @@ fun MovieGridScreen(
     val movies = viewModel.movies.collectAsState().value
     val error = viewModel.error.collectAsState().value
     val loadingNextPage = viewModel.loadingNextPage.collectAsState().value
+    val favoriteMovies = viewModel.favoriteMovies.collectAsState().value
     val gridState = rememberLazyGridState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -80,10 +87,27 @@ fun MovieGridScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(movies) { movie ->
-                    MovieGridItem(
-                        imageUrl = getPosterUrl(movie.posterUrl),
-                        modifier = Modifier.clickable { onMovieClick(movie.id) }
-                    )
+                    val isFavorite = favoriteMovies.any { it.id == movie.id }
+                    Box {
+                        MovieGridItem(
+                            imageUrl = getPosterUrl(movie.posterUrl),
+                            modifier = Modifier
+                                .clickable { onMovieClick(movie.id) }
+                        )
+                        IconButton(
+                            onClick = {
+                                if (isFavorite) viewModel.removeFavorite(movie.id)
+                                else viewModel.addFavorite(movie)
+                            },
+                            modifier = Modifier.align(Alignment.TopEnd)
+                        ) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                contentDescription = if (isFavorite) "Quitar de favoritos" else "Agregar a favoritos",
+                                tint = if (isFavorite) Color.Red else Color.Gray
+                            )
+                        }
+                    }
                 }
                 if (loadingNextPage) {
                     item(span = { GridItemSpan(maxLineSpan) }) {

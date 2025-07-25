@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -28,17 +30,27 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import pe.nettia.movie.R
+import pe.nettia.movie.domain.model.Movie
 import pe.nettia.movie.ui.viewmodel.MovieDetailViewModel
+import pe.nettia.movie.ui.viewmodel.MovieViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MovieDetailScreen(
     viewModel: MovieDetailViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    movieViewModel: MovieViewModel? = null, // para favoritos
+    movieFromList: Movie? = null // para obtener datos completos si no hay internet
 ) {
     val detail = viewModel.movieDetail.collectAsState().value
     val loading = viewModel.loading.collectAsState().value
     val error = viewModel.error.collectAsState().value
+    val isFavorite = movieViewModel?.favoriteMovies?.collectAsState()?.value?.any { it.id == detail?.id } == true
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -50,6 +62,27 @@ fun MovieDetailScreen(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Volver"
                         )
+                    }
+                },
+                actions = {
+                    if (detail != null && movieViewModel != null) {
+                        IconButton(onClick = {
+                            val movie = movieFromList ?: Movie(
+                                id = detail.id,
+                                title = detail.title,
+                                posterUrl = detail.posterUrl,
+                                overview = detail.overview ?: "",
+                                releaseDate = detail.releaseDate ?: ""
+                            )
+                            if (isFavorite) movieViewModel.removeFavorite(movie.id)
+                            else movieViewModel.addFavorite(movie)
+                        }) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                contentDescription = if (isFavorite) "Quitar de favoritos" else "Agregar a favoritos",
+                                tint = if (isFavorite) Color.Red else Color.Gray
+                            )
+                        }
                     }
                 }
             )
@@ -74,12 +107,18 @@ fun MovieDetailScreen(
                     ) {
                         detail.backdropUrl?.let {
                             AsyncImage(
-                                model = it,
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(it)
+                                    .diskCachePolicy(CachePolicy.ENABLED)
+                                    .networkCachePolicy(CachePolicy.ENABLED)
+                                    .crossfade(true)
+                                    .build(),
                                 contentDescription = null,
-                                contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(200.dp)
+                                    .height(200.dp),
+                                placeholder = painterResource(id = R.drawable.ic_placeholder),
+                                error = painterResource(id = R.drawable.ic_broken_image)
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
@@ -105,13 +144,20 @@ fun MovieDetailScreen(
                                     verticalArrangement = Arrangement.Center
                                 ) {
                                     AsyncImage(
-                                        model = actor.profileUrl,
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(actor.profileUrl)
+                                            .diskCachePolicy(CachePolicy.ENABLED)
+                                            .networkCachePolicy(CachePolicy.ENABLED)
+                                            .crossfade(true)
+                                            .build(),
                                         contentDescription = actor.name,
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier
                                             .size(64.dp)
                                             .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                                        placeholder = painterResource(id = R.drawable.ic_placeholder),
+                                        error = painterResource(id = R.drawable.ic_broken_image)
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
