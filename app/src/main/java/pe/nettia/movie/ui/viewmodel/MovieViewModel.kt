@@ -3,13 +3,13 @@ package pe.nettia.movie.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import pe.nettia.movie.domain.model.Movie
 import pe.nettia.movie.domain.usecase.GetPopularMoviesUseCase
+import javax.inject.Inject
 
 @HiltViewModel
 class MovieViewModel @Inject constructor(
@@ -21,8 +21,15 @@ class MovieViewModel @Inject constructor(
     private val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
+    private val _loadingNextPage = MutableStateFlow(false)
+    val loadingNextPage: StateFlow<Boolean> = _loadingNextPage.asStateFlow()
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    private var currentPage = 1
+    private var isLastPage = false
+    private var isLoadingPage = false
 
     init {
         loadPopularMovies()
@@ -30,15 +37,30 @@ class MovieViewModel @Inject constructor(
 
     fun loadPopularMovies(page: Int = 1) {
         viewModelScope.launch {
-            _loading.value = true
+            if (page == 1) _loading.value = true else _loadingNextPage.value = true
             _error.value = null
+            isLoadingPage = true
             try {
-                _movies.value = getPopularMoviesUseCase(page)
+                val newMovies = getPopularMoviesUseCase(page)
+                if (page == 1) {
+                    _movies.value = newMovies
+                } else {
+                    _movies.value = _movies.value + newMovies
+                }
+                isLastPage = newMovies.isEmpty()
+                currentPage = page
             } catch (e: Exception) {
                 _error.value = e.message ?: "Error desconocido"
             } finally {
-                _loading.value = false
+                if (page == 1) _loading.value = false else _loadingNextPage.value = false
+                isLoadingPage = false
             }
+        }
+    }
+
+    fun loadNextPage() {
+        if (!isLoadingPage && !isLastPage) {
+            loadPopularMovies(currentPage + 1)
         }
     }
 } 
